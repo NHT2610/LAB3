@@ -34,7 +34,7 @@ def F1(data):
         res = ls(A, Y)
         r = getR1(res, X, Y)
         print(i + ": ", end = "")
-        print("Y = " + str(res[0]) + "+" + str(res[1]) + "*x" + "; ", end = "")
+        print("Y = " + str(res[0]) + "+" + str(res[1]) + "*X" + "; ", end = "")
         n2 = norm2(r)
         print("norm2 = " + str(n2))
         if n2 < _norm2[1]:
@@ -69,7 +69,7 @@ def F2(data):
         res = ls(A, Y)
         r = getR2(res, X, Y)
         print(i + ": ", end = "")
-        print("Y = " + str(res[0]) + "+" + str(res[1]) + "*x^2" + "; ", end = "")
+        print("Y = " + str(res[0]) + "+" + str(res[1]) + "*X^2" + "; ", end = "")
         n2 = norm2(r)
         print("norm2 = " + str(n2))
         if n2 < _norm2[1]:
@@ -86,9 +86,8 @@ print()
 # Mô hình đa thức: Y = a + b*X + c*X^2
 def getA3(X):
     c1 = [1] * len(X)
-    c2 = [a for a in X]
     c3 = [a * a for a in X]
-    K = np.array([c1, c2, c3])
+    K = np.array([c1, X, c3])
     return np.transpose(K)
 
 def getR3(res, X, Y):
@@ -105,7 +104,7 @@ def F3(data):
         res = ls(A, Y)
         r = getR3(res, X, Y)
         print(i + ": ", end = "")
-        print("Y = " + str(res[0]) + "+" + str(res[1]) + "*x + " + str(res[2]) + "*x^2" + "; ", end = "")
+        print("Y = " + str(res[0]) + "+" + str(res[1]) + "*X + " + str(res[2]) + "*X^2" + "; ", end = "")
         n2 = norm2(r)
         print("norm2 = " + str(n2))
         if n2 < _norm2[1]:
@@ -122,7 +121,12 @@ print()
 # Mô hình tuyến tính: logY = a + b*lnX => Z = a + b*lnX
 def getA4(X):
     c1 = [1] * len(X)
-    c2 = [np.log(a) for a in X]
+    c2 = []
+    for a in X:
+        if a > 0:
+            c2.append(np.log(a))
+        else:
+            return []
     K = np.array([c1, c2])
     return np.transpose(K)
 
@@ -138,10 +142,16 @@ def F4(data):
         Y = data.quality
         Z = [np.log10(a) for a in Y]
         A = getA4(X)
+        if len(A) == 0:
+            print("Unsatisfactory data!")
+            continue
         res = ls(A, Z)
         r = getR4(res, X, Z)
+        if r == False:
+            print(i + ": " + "Unsatisfactory data!")
+            continue
         print(i + ": ", end = "")
-        print("logY = " + str(res[0]) + "+" + str(res[1]) + "*lnx" + "; ", end = "")
+        print("logY = " + str(res[0]) + "+" + str(res[1]) + "*lnX" + "; ", end = "")
         n2 = norm2(r)
         print("norm2 = " + str(n2))
         if n2 < _norm2[1]:
@@ -156,6 +166,34 @@ F4(data)
 print()
 
 # Mô hình log - tuyến tính: lnY = a + b*X
-# Mô hình log - log: lnY = a + b*lnX 
+def getA5(X):
+    c1 = [1] * len(X)
+    K = np.array([c1, X])
+    return np.transpose(K)
 
+def getR5(res, X, Z):
+    return [res[0] + res[1] * a - b for a, b in zip(X, Z)]
 
+def F5(data):
+    _norm2 = [MAX_VALUE] * 2
+    for i in data.keys():
+        if i == 'quality':
+            break
+        X = data[i]
+        Y = data.quality
+        Z = [np.log(a) for a in Y]
+        A = getA5(X)
+        res = ls(A, Z)
+        r = getR5(res, X, Z)
+        print(i + ": ", end = "")
+        print("logY = " + str(res[0]) + "+" + str(res[1]) + "*X" + "; ", end = "")
+        n2 = norm2(r)
+        print("norm2 = " + str(n2))
+        if n2 < _norm2[1]:
+            _norm2[0] = i
+            _norm2[1] = n2   
+    print("# Best: ")
+    print(str(_norm2[0]) + ": norm2 = " + str(_norm2[1]))
+
+print("$$ Model: lnY = a + b*X")
+F5(data)
